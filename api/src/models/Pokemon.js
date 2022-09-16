@@ -7,6 +7,59 @@ module.exports = (sequelize) => {
     name: {
       type: DataTypes.STRING,
       allowNull: false,
+      unique: true 
     },
+    id:{
+      type: DataTypes.INTEGER,
+      primaryKey:true,
+      autoIncrement: true,
+    },
+    hp:{
+      type:DataTypes.INTEGER,
+      allowNull: true,
+      validate: {
+        min:1
+      }
+    },
+    attack:{
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      validate:{
+        min:1
+      }
+    },
+    defense:{
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      validate:{
+        min:1
+      }
+    },
+    speed:{
+      type:DataTypes.INTEGER,
+      allowNull: true,
+      validate:{
+        min:1
+      }
+    },
+    weight:{
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      validate:{
+        min:1
+      }
+    },
+    height:{
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      validate:{
+        min:1
+      }
+    }
+  },
+  {
+    initialAutoIncrement: 1
   });
 };
+
+
