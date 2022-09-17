@@ -19,7 +19,7 @@ describe('Pokemon model', () => {
     it("should work correctly when all parameters are valid",()=>{
       Pokemon.create(dummy);
     })
-    beforeEach(() => Pokemon.sync({ force: true }));
+    beforeEach(() => Pokemon.sync({force:true}));
     describe('name', () => {
       it('should throw an error if name is null', (done) => {
         Pokemon.create({...dummy, name:null})
@@ -33,5 +33,22 @@ describe('Pokemon model', () => {
         .catch(()=>done())
       });
     });
+    describe('stats',()=>{
+      it("should return an error if a stat is lesser than 1", (done)=>{
+        Pokemon.create({dummy, hp:0})
+        .then(()=>done(new Error("should not have accepted hp=0")))
+        .catch(()=>done());
+      });
+      it("should operate normally if any stat is null", ()=>{
+        Pokemon.create({...dummy,
+          hp:null,
+          attack:null,
+          defense:null,
+          speed:null,
+          height:null,
+          weight:null
+        })
+      })
+    })
   });
 });
