@@ -1,9 +1,9 @@
 const {Router} = require('express');
 const {Pokemon, Type} = require('../db');
 
-const pokemon = Router();
+const pokemons = Router();
 
-pokemon.get('/',function(req,res){
+pokemons.get('/',function(req,res){
     if(req.query.name !== null){
         Pokemon.findOne({where:{name:req.query.name}})
         .then(found=>{
@@ -17,10 +17,10 @@ pokemon.get('/',function(req,res){
     }
 });
 
-pokemon.get('/:id', function(req,res){
+pokemons.get('/:id', function(req,res){
     Pokemon.findByPk(req.params.id)
     .then(found=>{res.send(found)})
     .catch(err=>res.status(500).send(err));
 })
 
-module.exports= {pokemon};
+module.exports= {pokemons};
