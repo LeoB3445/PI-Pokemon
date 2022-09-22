@@ -13,8 +13,8 @@ describe("Many to Many relation", ()=>{
     );
     beforeEach(()=>{
         //nota : estas declaraciones hacen que el test sea destructivo.
-        Pokemon.sync({force:true});
-        Type.sync({force:true});
+        Pokemon.sync({alter:true});
+        Type.sync({alter:true});
     });
     describe("pokemon to type association", ()=>{
         it("should create associations between defined model instances", ()=>{

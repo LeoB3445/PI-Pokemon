@@ -19,7 +19,7 @@ describe('Pokemon model', () => {
     it("should work correctly when all parameters are valid",()=>{
       Pokemon.create(dummy);
     })
-    beforeEach(() => {Pokemon.sync({force:true})});
+    beforeEach(() => {Pokemon.sync({alter:true})});
     describe('name', () => {
       it('should throw an error if name is null', (done) => {
         Pokemon.create({...dummy, name:null})

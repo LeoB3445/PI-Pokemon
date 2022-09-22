@@ -7,7 +7,7 @@ describe("Type model", ()=>{
       console.error('Unable to connect to the database:', err);
     }));
     describe("Validators", ()=>{
-      beforeEach(() => Type.sync({force:true}));
+      beforeEach(() => Type.sync({alter:true}));
       describe("id", ()=>{
         it("should auto increment", ()=>{
           let idArray = [];
