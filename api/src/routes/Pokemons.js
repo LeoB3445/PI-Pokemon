@@ -5,16 +5,27 @@ const {Pokemon, Type} = require('../db');
 const pokemons = Router();
 
 pokemons.get('/',function(req,res){
-    if(req.query.name !== null){
-        Pokemon.findOne({where:{name:req.query.name}})
-        .then(found=>{
-            res.send(found);
-        })
-        .catch(err=>res.status(500).send(err));
+    
+    if(req.query.limit===null||req.query.offset===null){
+        res.status(422).send('Missing query parameters "limit" and/or "offset"')
     }else{
-        Pokemon.findAll()
-        .then(found=>{res.send(found)})
-        .catch(err=>res.status(500).send(err));
+        if(req.query.name !== null){
+            Pokemon.findOne({where:{name:req.query.name}})
+            .then(found=>{
+                fetch(`https://pokeapi.co/api/v2/pokemon/${req.query.name}`)
+                .then(apiData=> apiData.json())
+                .then(()=>res.send({dbData:found, apiData:apiData}))
+            })
+            .catch(err=>res.status(500).send(err));
+        }else{
+            Pokemon.findAll()
+            .then(found=>{
+                fetch(`https://pokeapi.co/api/v2/pokemon/?limit=${req.query.limit}&offset=${req.query.offset}`)
+                .then(apiData => apiData.json())
+                .then(()=>res.send({dbData:found, apiData:apiData}));
+            })
+            .catch(err=>res.status(500).send(err));
+        }
     }
 });
 
