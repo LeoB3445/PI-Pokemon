@@ -34,7 +34,8 @@ pokemons.post('/', function(req, res){
             return createdMon.setTypes(foundTypes);
         }
     })
-    .then(()=> {res.send('Pokemon created successfuly')});
+    .then(()=> {res.send('Pokemon created successfuly')})
+    .catch(err=>res.status(500).send(err));
 })
 
 pokemons.get('/:id', function(req,res){
