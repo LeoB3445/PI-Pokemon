@@ -16,9 +16,18 @@ describe('Pokemon routes', () => {
   }));
   beforeEach(() => Pokemon.sync({ force: true })
     .then(() => Pokemon.create(pokemon)));
-  describe('GET /pokemons', () => {
+  describe('GET /pokemons?limit=1', () => {
     it('should get 200', () =>
-      agent.get('/pokemons').expect(200)
+      agent.get('/pokemons?limit=1').expect(200)
     );
+    it('should get an array with 1 element', ()=>{
+      agent.get('/pokemons?limit=1')
+      .expect(200)
+      .then((response)=>{
+        expect(Array.isArray(response.body.results)).to.equal(true);
+        expect(response.body.results.length).to.equal(1);
+        expect(response.body.results[0].name).to.equal('bulbasaur');
+      })
+    })
   });
 });
