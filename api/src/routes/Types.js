@@ -22,3 +22,5 @@ types.get('/', function(req,res){
     })
 
 })
+
+module.exports = {types}

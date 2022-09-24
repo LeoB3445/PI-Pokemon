@@ -5,9 +5,10 @@ const {Pokemon, Type} = require('../db');
 const pokemons = Router();
 
 pokemons.get('/',function(req,res){
+    let offset = req.query.offset ? req.query.offset: 0;
     
-    if(req.query.limit===null||req.query.offset===null){
-        res.status(422).send('Missing query parameters "limit" and/or "offset"')
+    if(!req.query.limit){
+        res.status(422).send(`Invalid value "${req.query.limit}" for mandatory query parameter "limit"`)
     }else{
         if(req.query.name !== null){
             Pokemon.findOne({where:{name:req.query.name}})
@@ -20,7 +21,7 @@ pokemons.get('/',function(req,res){
         }else{
             Pokemon.findAll()
             .then(found=>{
-                fetch(`https://pokeapi.co/api/v2/pokemon/?limit=${req.query.limit}&offset=${req.query.offset}`)
+                fetch(`https://pokeapi.co/api/v2/pokemon/?limit=${req.query.limit}&offset=${offset}`)
                 .then(apiData => apiData.json())
                 .then(()=>res.send({dbData:found, apiData:apiData}));
             })
@@ -40,7 +41,7 @@ pokemons.post('/', function(req, res){
     }))
     .then((foundTypes)=>{
         if(foundTypes.length < req.body.types.length){
-            res.status(404).send({msg:`Could not find ${req.body.types.length - foundTypes.length} of the specified types`});
+            res.status(404).send(`Could not find ${req.body.types.length - foundTypes.length} of the specified types`);
         }else{
             return createdMon.setTypes(foundTypes);
         }
