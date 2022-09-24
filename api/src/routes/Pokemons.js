@@ -12,10 +12,26 @@ pokemons.get('/',function(req,res){
     }else{
         if(req.query.name !== null){
             Pokemon.findOne({where:{name:req.query.name}})
+            .then()
             .then(found=>{
-                fetch(`https://pokeapi.co/api/v2/pokemon/${req.query.name}`)
-                .then(apiData=> apiData.json())
-                .then(()=>res.send({dbData:found, apiData:apiData}))
+                found.getTypes()
+                .then(types=>{
+                    fetch(`https://pokeapi.co/api/v2/pokemon/${req.query.name}`)
+                    .then(apiData=> apiData.json())
+                    .then((apiData)=>res.send({
+                        dbData:{
+                            name:found.name,
+                            id: found.id,
+                            types:types
+                        }, 
+                        apiData:{
+                            name: apiData.forms[0].name,
+                            img: apiData.sprites.front_default,
+                            types: apiData.types.map((elem=>elem.type))
+                        }
+                    }))
+                })
+                
             })
             .catch(err=>res.status(500).send(err));
         }else{
@@ -23,7 +39,23 @@ pokemons.get('/',function(req,res){
             .then(found=>{
                 fetch(`https://pokeapi.co/api/v2/pokemon/?limit=${req.query.limit}&offset=${offset}`)
                 .then(apiData => apiData.json())
-                .then(()=>res.send({dbData:found, apiData:apiData}));
+                .then(apiData=> Promise.all(apiData.results.map(( //results of individual detail fetches are put in promise array
+                    //fetches individual pokemon details from links provided by API
+                    elem => fetch(elem.url).then(pokemon=>({
+                        name:pokemon.forms[0].name,
+                        img:pokemon.sprites.front_default, 
+                        types:pokemon.types.map(elem=>elem.type)
+                    }) 
+                    )
+                    )))
+                )
+                .then((resultsArray)=>res.send({
+                    dbData:{
+                        name:found.name,
+                        id: found.id,
+                        types:types
+                    }, 
+                    apiData:resultsArray}));
             })
             .catch(err=>res.status(500).send(err));
         }
