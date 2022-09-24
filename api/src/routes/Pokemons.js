@@ -50,9 +50,20 @@ pokemons.post('/', function(req, res){
 })
 
 pokemons.get('/:id', function(req,res){
-    Pokemon.findByPk(req.params.id)
-    .then(found=>{res.send(found)})
-    .catch(err=>res.status(500).send(err));
+    let idNum = parseInt(req.params.id)
+    if(idNum <0){
+        Pokemon.findByPk(req.params.id*(-1))
+        .then(found=>{res.send(found)})
+        .catch(err=>res.status(500).send(err));
+    }else{
+        fetch(`https://pokeapi.co/api/v2/pokemon/${idNum}`)
+        .then(data=>{data.json()})
+        .then((data)=> res.send({
+            name: data.forms[0].name,
+            img: data.sprites.front_default,
+            types: data.types.map((elem=>elem.type))
+        }))
+    }
 })
 
 module.exports= {pokemons};
