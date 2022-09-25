@@ -5,62 +5,66 @@ const {Pokemon, Type} = require('../db');
 const pokemons = Router();
 
 pokemons.get('/',function(req,res){
-    let offset = req.query.offset ? req.query.offset: 0;
+    var offset = req.query.offset ? req.query.offset: 0;
+    var dbQuery, apiQuery;
     
-    if(!req.query.limit){
-        res.status(422).send(`Invalid value "${req.query.limit}" for mandatory query parameter "limit"`)
+    
+    if(req.query.name){
+        //Queries database and API for any pokemon with the specified name
+        dbQuery = Pokemon.findOne({where:{name:req.query.name}})
+        .then((data)=>
+            data.getTypes()
+            .then(types=>({
+                name: data.name,
+                img:null,
+                types:types.map(elem=>elem.name)
+            })
+            )
+        );
+        apiQuery = fetch(`https://pokeapi.co/api/v2/pokemon/${req.query.name}`)
+        .then((data)=>data.json())
+        .then(poke=> (poke !== 'Not Found'?{
+            name: poke.forms[0].name,
+            img: poke.sprites.front_default,
+            types: poke.types.map((elem=>elem.type))
+        }: null))
     }else{
-        if(req.query.name !== null){
-            Pokemon.findOne({where:{name:req.query.name}})
-            .then()
-            .then(found=>{
-                found.getTypes()
-                .then(types=>{
-                    fetch(`https://pokeapi.co/api/v2/pokemon/${req.query.name}`)
-                    .then(apiData=> apiData.json())
-                    .then((apiData)=>res.send({
-                        dbData:{
-                            name:found.name,
-                            id: found.id,
-                            types:types
-                        }, 
-                        apiData:{
-                            name: apiData.forms[0].name,
-                            img: apiData.sprites.front_default,
-                            types: apiData.types.map((elem=>elem.type))
-                        }
-                    }))
-                })
-                
-            })
-            .catch(err=>res.status(500).send(err));
+        if(!req.query.limit){
+            res.status(422).send(`Invalid value "${req.query.limit}" for mandatory query parameter "limit"`)
         }else{
-            Pokemon.findAll()
-            .then(found=>{
-                fetch(`https://pokeapi.co/api/v2/pokemon/?limit=${req.query.limit}&offset=${offset}`)
-                .then(apiData => apiData.json())
-                .then(apiData=> Promise.all(apiData.results.map(( //results of individual detail fetches are put in promise array
-                    //fetches individual pokemon details from links provided by API
-                    elem => fetch(elem.url).then(pokemon=>({
-                        name:pokemon.forms[0].name,
-                        img:pokemon.sprites.front_default, 
-                        types:pokemon.types.map(elem=>elem.type)
-                    }) 
-                    )
-                    )))
-                )
-                .then((resultsArray)=>res.send({
-                    dbData:{
-                        name:found.name,
-                        id: found.id,
-                        types:types
-                    }, 
-                    apiData:resultsArray}));
-            })
-            .catch(err=>res.status(500).send(err));
+            dbQuery = Pokemon.findAll()
+            .then(data=>
+                Promise.all(data.map(poke=> 
+                    poke.getTypes()
+                    .then(types =>({
+                        name: poke.name,
+                        img:null,
+                        types: types.map( e => e.name)
+                    }))
+                ))
+                
+            );
+            apiQuery = fetch(`https://pokeapi.co/api/v2/pokemon?limit=${req.querylimit}&offset=${offset}`)
+            .then((data=>
+                Promise.all(data.map(elem=> 
+                    fetch(elem.url)
+                    .then(poke=>({
+                        name: poke.forms[0].name,
+                        img: poke.sprites.front_default,
+                        types: poke.types.map((elem=>elem.type))
+                    }))
+                    ))
+                
+            ))
         }
+
     }
-});
+    Promise.all([apiQuery,dbQuery])
+    .then(([apiQuery, dbQuery]) =>{
+        res.send({apiQuery: apiQuery, dbQuery: dbQuery})
+    })
+}
+);
 
 pokemons.post('/', function(req, res){
     var createdMon = Pokemon.create(req.body.pokemon)
@@ -94,7 +98,13 @@ pokemons.get('/:id', function(req,res){
         .then((data)=> res.send({
             name: data.forms[0].name,
             img: data.sprites.front_default,
-            types: data.types.map((elem=>elem.type))
+            types: data.types.map((elem=>elem.type)),
+            hp: data.stats[0].base_stats,
+            attack:data.stats[1].base_stats,
+            defense: data.stats[2].base_stats,
+            speed: data.stats[5].base_stats,
+            height: data.height,
+            weigth: data.weigth
         }))
     }
 })
